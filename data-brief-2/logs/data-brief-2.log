@@ -1,0 +1,377 @@
+------------------------------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  /Users/michellewang/Desktop/econ-255-fa23/data-brief-2/logs/data-brief-2.log
+  log type:  text
+ opened on:   8 Dec 2023, 12:18:18
+
+.                 
+.                 /* clean up census data for analysis */
+.                         do "$code/1.prep-data-for-analysis.do"
+
+. /********************************************************************************\
+>   Project: ECON 255 - Data Brief 2
+> 
+>   File Name: prep-data-for-analysis.do
+> 
+>   Description: This program prepares the household pulse data for analysis
+> 
+>                           
+>   Data source: https://www.census.gov/programs-surveys/household-pulse-survey/datasets.html
+> *******************************************************************************/
+. 
+. 
+.         /* import raw csv of household pulse data */
+.                 import delimited "$data/raw/household-pulse/pulse2023_puf_62.csv", clear
+(encoding automatically selected: ISO-8859-1)
+(247 vars, 72,839 obs)
+
+.                 
+.                 
+. 
+. /******************************************************************************/      
+. /************************    clean the data  **********************************/          
+. /******************************************************************************/
+. 
+.         
+.         replace tspndfood = . if tspndfood < 0
+(11,599 real changes made, 11,599 to missing)
+
+.         
+.         replace income = . if income < 0
+(14,183 real changes made, 14,183 to missing)
+
+.         
+.         replace thhld_numper = . if thhld_numper < 0
+(0 real changes made)
+
+.         
+.         replace tspndprpd = . if tspndprpd < 0
+(12,063 real changes made, 12,063 to missing)
+
+.         
+.         replace expns_dif = . if expns_dif < 0  
+(5,376 real changes made, 5,376 to missing)
+
+.                         
+.                         
+.                         
+.         /* save the cleaned data */ 
+.                 save "$data/data-for-analysis.dta", replace
+file ~/Desktop/econ-255-fa23/data-brief-2/data/data-for-analysis.dta saved
+
+.                         
+.                         
+.                         
+.                         
+.                         
+. 
+end of do-file
+
+.                 
+.                 /* create figures for data brief */
+.                         do "$code/2.create-visualizations.do"
+
+. /********************************************************************************\
+>   Project: ECON 255 - Data Brief 2
+>   
+>   File Name: 2.create-visualizations.do
+> 
+>   Description: This program creates DB2 visualizations
+> 
+> *******************************************************************************/
+. 
+.         /* import data cleaned by previous do file */ 
+.                 use "$data/data-for-analysis.dta", clear
+
+.                 
+. 
+.                 
+.                 
+. /******************************************************************************/      
+. /***************************    create figures   ******************************/          
+. /******************************************************************************/        
+.         
+. 
+.         /* create bar graph for income */
+.         gen incomecap = ""
+(72,839 missing values generated)
+
+.         replace incomecap = "1. Less than $25,000" if income == 1
+variable incomecap was str1 now str20
+(5,975 real changes made)
+
+.         replace incomecap = "2. $25,000 - $34,999" if income == 2
+(4,864 real changes made)
+
+.         replace incomecap = "3. $35,000 - $49,999" if income == 3
+(6,228 real changes made)
+
+.         replace incomecap = "4. $50,000 - $74,999" if income == 4
+(9,866 real changes made)
+
+.         replace incomecap = "5. $75,000 - $99,999" if income == 5
+(8,295 real changes made)
+
+.         replace incomecap = "6. $100,000 - $149,999" if income == 6
+variable incomecap was str20 now str22
+(10,895 real changes made)
+
+.         replace incomecap = "7. $150,000 - $199,999" if income == 7
+(5,609 real changes made)
+
+.         replace incomecap = "8. $200,000 and above" if income == 8
+(6,924 real changes made)
+
+.         
+.         graph bar (mean) tspndfood if income > 0, over(incomecap, lab(angle(30) labsize(2))) ///
+>                 title("Figure 1: Food Spending and Income", size(4)) ///
+>                 ytitle("Mean Household Spending on Food (Dollars)", size(3)) ///
+>                 note("Bar graph of mean household spending on food, measured in dollars, and income, measured ""in 8 groups.") ///
+>                 blabel(bar)
+
+.         graph export "$output/figures/bargraph1.png", replace
+file ~/Desktop/econ-255-fa23/data-brief-2/output/figures/bargraph1.png saved as PNG format
+
+.         
+.         
+.         /* create scatterplot for number of people in household */
+.         preserve
+
+.                 collapse (mean) tspndfood, by(thhld_numper)
+
+.         graph twoway ///
+>                         (scatter tspndfood thhld_numper) ///
+>                         (lfit tspndfood thhld_numper), ///
+>                         title("Figure 2: Food Spending and Number of People in Household", size(4)) ///
+>                         ytitle("Mean Household Spending on Food (Dollars)", size(3)) ///
+>                         xtitle("Total Number of People in Household", size(3)) ///
+>                         note("Scatterplot of mean household spending on food, measured in dollars, and the number of" "people in h
+> ousehold, ranging from 1-40.")
+
+.                 /* export the scatterplot to output folder */
+.                 graph export "$output/figures/scatterplot1.png", replace        
+file ~/Desktop/econ-255-fa23/data-brief-2/output/figures/scatterplot1.png saved as PNG format
+
+.         restore
+
+.         
+.         /* create scatterplot for emp status */
+.         gen empstat = "Employed"
+
+.         replace empstat = "Not Employed" if anywork == 2
+variable empstat was str8 now str12
+(26,815 real changes made)
+
+.         
+.         graph bar (mean) tspndfood if anywork > 0, over(empstat) ///
+>                 title("Figure 3: Food Spending and Employment Status", size(4)) ///
+>                 ytitle("Mean Household Spending on Food (Dollars)", size(3)) ///
+>                 note("Bar graph of mean household spending on food, measured in dollars, and employment status for the last 7 days
+> .", size(2.5)) ///
+>                 blabel(bar)
+
+.         graph export "$output/figures/bargraph2.png", replace
+file ~/Desktop/econ-255-fa23/data-brief-2/output/figures/bargraph2.png saved as PNG format
+
+.         
+.         /* create bar graph for housing tenure */
+.         gen tenurecap = "1. Owned free and clear"
+
+.         replace tenurecap = "2. Owned w/ mortgage or loan" if tenure == 2
+variable tenurecap was str23 now str28
+(29,229 real changes made)
+
+.         replace tenurecap = "3. Rented" if tenure == 3
+(14,116 real changes made)
+
+.         replace tenurecap = "4. Occupied w/o rent" if tenure == 4
+(813 real changes made)
+
+.         
+.         graph bar tspndfood if tenure > 0, over(tenurecap, lab(angle(30) labsize(2))) ///
+>                 title("Figure 4: Food Spending and Housing Tenure", size(4)) ///
+>                 ytitle("Mean Household Spending on Food (Dollars)", size(3)) ///
+>                 note("Bar graph of mean household spending on food, measured in dollars, and housing tenure, measured ""in 4 categ
+> ories.") ///
+>                 blabel(bar)     
+
+.         graph export "$output/figures/bargraph3.png", replace
+file ~/Desktop/econ-255-fa23/data-brief-2/output/figures/bargraph3.png saved as PNG format
+
+.         
+. 
+end of do-file
+
+.                 
+.                 /* run main regression for data brief */
+.                         do "$code/3.run-regressions.do"
+
+. /********************************************************************************\
+>   Project: ECON 255 - Data Brief 2
+>   
+>   File Name: 3.run-regressions.do
+> 
+>   Description: This program performs regressions on the data
+> 
+> *******************************************************************************/
+. 
+. 
+.         /* import data for analysis */
+.                 use "$data/data-for-analysis.dta", replace
+
+.         
+.         
+. 
+. /******************************************************************************/      
+. /**********************    run  regressions  **********************************/          
+. /******************************************************************************/
+. 
+. regress tspndfood i.income, robust
+
+Linear regression                               Number of obs     =     56,940
+                                                F(7, 56932)       =     189.95
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.0241
+                                                Root MSE          =     170.34
+
+------------------------------------------------------------------------------
+             |               Robust
+   tspndfood | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      income |
+          2  |   13.28238   3.469311     3.83   0.000     6.482513    20.08225
+          3  |    19.4438   3.210857     6.06   0.000      13.1505    25.73709
+          4  |   29.40699   2.907714    10.11   0.000     23.70785    35.10612
+          5  |   43.64376   3.023767    14.43   0.000     37.71716    49.57036
+          6  |   59.03108   2.885648    20.46   0.000     53.37519    64.68696
+          7  |   66.37262   3.242492    20.47   0.000     60.01732    72.72792
+          8  |   90.60251   3.228276    28.07   0.000     84.27507    96.92995
+             |
+       _cons |    199.077   2.372835    83.90   0.000     194.4262    203.7278
+------------------------------------------------------------------------------
+
+. est sto col1
+
+. 
+. regress tspndfood i.income thhld_numper, robust
+
+Linear regression                               Number of obs     =     56,940
+                                                F(8, 56931)       =     888.98
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.1435
+                                                Root MSE          =     159.58
+
+------------------------------------------------------------------------------
+             |               Robust
+   tspndfood | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      income |
+          2  |    5.51799   3.220551     1.71   0.087    -.7943084    11.83029
+          3  |   10.93245   2.999482     3.64   0.000     5.053452    16.81145
+          4  |   17.26491   2.722118     6.34   0.000     11.92954    22.60028
+          5  |   26.97861   2.834412     9.52   0.000     21.42315    32.53407
+          6  |   35.19398   2.737682    12.86   0.000      29.8281    40.55985
+          7  |   39.62402    3.07923    12.87   0.000     33.58872    45.65933
+          8  |   58.11712   3.079736    18.87   0.000     52.08082    64.15342
+             |
+thhld_numper |   42.00707   .5954959    70.54   0.000     40.83989    43.17424
+       _cons |   105.4156   2.363069    44.61   0.000     100.7839    110.0472
+------------------------------------------------------------------------------
+
+. est sto col2
+
+. 
+. regress tspndfood i.income thhld_numper i.anywork if anywork > 0, robust
+
+Linear regression                               Number of obs     =     56,726
+                                                F(9, 56716)       =     797.19
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.1440
+                                                Root MSE          =     159.44
+
+------------------------------------------------------------------------------
+             |               Robust
+   tspndfood | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      income |
+          2  |   4.510572   3.235883     1.39   0.163    -1.831777    10.85292
+          3  |   9.289313   3.027365     3.07   0.002      3.35566    15.22297
+          4  |   15.41723   2.763084     5.58   0.000     10.00157    20.83289
+          5  |   24.83246   2.873078     8.64   0.000     19.20122    30.46371
+          6  |   32.75934   2.799046    11.70   0.000     27.27319    38.24548
+          7  |   36.82637    3.15147    11.69   0.000     30.64947    43.00327
+          8  |   55.03902   3.147851    17.48   0.000     48.86922    61.20883
+             |
+thhld_numper |   41.73297   .6011758    69.42   0.000     40.55466    42.91128
+   2.anywork |  -6.806403   1.461366    -4.66   0.000    -9.670688   -3.942117
+       _cons |   110.5022   2.649996    41.70   0.000     105.3082    115.6962
+------------------------------------------------------------------------------
+
+. est sto col3
+
+. 
+. regress tspndfood i.income thhld_numper i.anywork i.tenure if anywork > 0 & tenure > 0, robust
+
+Linear regression                               Number of obs     =     56,533
+                                                F(12, 56520)      =     605.70
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.1446
+                                                Root MSE          =     159.19
+
+------------------------------------------------------------------------------
+             |               Robust
+   tspndfood | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      income |
+          2  |    4.50123   3.258049     1.38   0.167    -1.884564    10.88702
+          3  |   8.780284   3.043995     2.88   0.004     2.814035    14.74653
+          4  |   14.81822   2.805405     5.28   0.000      9.31961    20.31683
+          5  |   23.88029   2.943131     8.11   0.000     18.11174    29.64885
+          6  |   31.51689   2.885961    10.92   0.000     25.86039    37.17339
+          7  |   35.44414    3.22644    10.99   0.000      29.1203    41.76798
+          8  |   53.69016    3.24696    16.54   0.000      47.3261    60.05422
+             |
+thhld_numper |   41.42868   .6115003    67.75   0.000     40.23014    42.62723
+   2.anywork |   -5.60037   1.527753    -3.67   0.000    -8.594774   -2.605966
+             |
+      tenure |
+          2  |   7.912714   1.687562     4.69   0.000     4.605082    11.22035
+          3  |   3.399585   1.953453     1.74   0.082    -.4291947    7.228364
+          4  |   10.21913   6.945759     1.47   0.141    -3.394604    23.83286
+             |
+       _cons |    106.747   3.060757    34.88   0.000     100.7479    112.7461
+------------------------------------------------------------------------------
+
+. est sto col4
+
+. 
+. /******************************************************************************/      
+. /*****************    display results in table   ******************************/          
+. /******************************************************************************/
+. 
+. esttab col* using "$output/tables/regression-table.xls", ///
+>                 cells(b(star fmt(4)) se(fmt(4)) n(fmt(0))) ///
+>                 label replace ///
+>                 title("Regression Results") ///
+>                 collabels("Income" "People in Household" "Employment Status" "Tenure") ///
+>                 stats(N se r2) ///
+>                 starlevels(* 0.05 ** 0.01 *** 0.001) ///
+>                 addnote("Calculations from the Pulse Survey. Linear Regressions of household spending on food on income, total num
+> ber of people in the household, employment status in the last 7 days, and housing tenure. * Significant at 5% ** Significant at 1%
+>  *** Significant at 0.1%") ///
+>                 mtitles("Model 1") 
+(output written to ~/Desktop/econ-255-fa23/data-brief-2/output/tables/regression-table.xls)
+
+.                 
+.                 
+. 
+end of do-file
+
+.                 
+.         /* close the log file */
+.                 log close
+      name:  <unnamed>
+       log:  /Users/michellewang/Desktop/econ-255-fa23/data-brief-2/logs/data-brief-2.log
+  log type:  text
+ closed on:   8 Dec 2023, 12:18:26
+------------------------------------------------------------------------------------------------------------------------------------

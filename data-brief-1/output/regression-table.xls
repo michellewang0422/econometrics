@@ -1,0 +1,26 @@
+\begin{table}[htbp]\centering
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\caption{Regression Results}
+\begin{tabular}{l*{3}{c}}
+\toprule
+                    &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)}&\multicolumn{1}{c}{(3)}\\
+                    &\multicolumn{1}{c}{Model 1}&\multicolumn{1}{c}{col1}&\multicolumn{1}{c}{col3}\\
+                    &    Column 1   &    Column 1   &    Column 1   \\
+\midrule
+MD\_PC               &   43226.783***&               &               \\
+                    &    7717.757   &               &               \\
+                    &               &               &               \\
+F11396              &               &       0.001***&     478.105***\\
+                    &               &       0.000   &      22.794   \\
+                    &               &               &               \\
+Constant            & 8467451.323***&     217.094***& 2322136.974***\\
+                    & 1518612.390   &       7.524   &  504568.739   \\
+                    &               &               &               \\
+\midrule
+N                   &     519.000   &     519.000   &     519.000   \\
+se                  &               &               &               \\
+r2                  &       0.049   &       0.052   &       0.908   \\
+\bottomrule
+\multicolumn{4}{l}{\footnotesize Table note here.}\\
+\end{tabular}
+\end{table}
